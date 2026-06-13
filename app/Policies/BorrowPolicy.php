@@ -13,7 +13,7 @@ class BorrowPolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -21,12 +21,12 @@ class BorrowPolicy
      */
     public function view(User $user, Borrow $borrow): bool
     {
-        return false;
+        return true;
     }
 
-    public function create(User $user, Book $book): bool
+    public function create(User $user): bool
     {
-        return $book->available_copies > 0;
+        return true;
     }
 
     /**

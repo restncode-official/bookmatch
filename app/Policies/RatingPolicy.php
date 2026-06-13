@@ -13,7 +13,7 @@ class RatingPolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -21,7 +21,7 @@ class RatingPolicy
      */
     public function view(User $user, Rating $rating): bool
     {
-        return false;
+        return true;
     }
 
     /**
