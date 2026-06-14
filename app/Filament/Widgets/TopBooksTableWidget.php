@@ -12,6 +12,10 @@ use Filament\Tables\Columns\TextColumn;
 
 class TopBooksTableWidget extends BaseWidget
 {
+    protected static ?int $sort = 2;
+
+    protected int | string | array $columnSpan = 'full';
+
     protected function getTableQuery(): \Illuminate\Database\Eloquent\Builder
     {
         return Book::query()
