@@ -8,7 +8,7 @@ BookMatch is a university library management system: a catalog of books with bor
 
 ## Stack
 
-- PHP 8.5 (8.5.6), Laravel 13, Filament **5** (note: v5 API differs from v3/v4 — `form(Schema $schema)`, actions live under `Filament\Actions\`)
+- PHP 8.4 (8.4.22), Laravel 13, Filament **5** (note: v5 API differs from v3/v4 — `form(Schema $schema)`, actions live under `Filament\Actions\`)
 - Spatie Laravel Permission 8 for roles/permissions
 - Laravel Breeze (Blade + Alpine + Tailwind 3, Vite 8) — server-rendered, **not** Inertia/Livewire SPA
 - **PHPUnit** for tests (not Pest, despite the pest-plugin allow-list entry)
