@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources;
 
+use App\Events\RatingApproved;
 use App\Filament\Resources\RatingResource\Pages;
 use App\Models\Rating;
 use Filament\Actions\BulkAction;
@@ -95,6 +96,8 @@ class RatingResource extends Resource
                     ->action(function (Rating $record) {
                         DB::transaction(function () use ($record) {
                             $record->update(['is_approved' => true]);
+                            $record->load('user', 'book');
+                            RatingApproved::dispatch($record);
                         });
                     }),
                 Action::make('reject')
