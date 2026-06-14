@@ -118,14 +118,14 @@ class BookDetail extends Component
 
         $this->validate([
             'newRating'  => ['required', 'integer', 'min:1', 'max:5'],
-            'newMessage' => ['nullable', 'string', 'max:1000'],
+            'newMessage' => ['required', 'string', 'max:1000'],
         ]);
 
         Rating::create([
             'user_id'     => Auth::id(),
             'book_id'     => $this->book->id,
             'rating'      => $this->newRating,
-            'message'     => $this->newMessage ?: null,
+            'message'     => $this->newMessage,
             'is_approved' => null,
         ]);
 
@@ -164,7 +164,7 @@ class BookDetail extends Component
 
         $this->validate([
             'editRating'  => ['required', 'integer', 'min:1', 'max:5'],
-            'editMessage' => ['nullable', 'string', 'max:1000'],
+            'editMessage' => ['required', 'string', 'max:1000'],
         ]);
 
         $rating = $this->userRating;
@@ -174,7 +174,7 @@ class BookDetail extends Component
 
         $rating->update([
             'rating'      => $this->editRating,
-            'message'     => $this->editMessage ?: null,
+            'message'     => $this->editMessage,
             'is_approved' => null,
         ]);
 

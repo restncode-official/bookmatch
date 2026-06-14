@@ -322,7 +322,7 @@
 
                         <div class="mb-5">
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">
-                                Review <span class="text-gray-400 font-normal">(optional)</span>
+                                Review <span class="text-red-500">*</span>
                             </label>
                             <textarea
                                 wire:model="editMessage"
@@ -446,7 +446,7 @@
 
                     <div class="mb-5">
                         <label class="block text-sm font-semibold text-gray-700 mb-1.5">
-                            Review <span class="text-gray-400 font-normal">(optional)</span>
+                            Review <span class="text-red-500">*</span>
                         </label>
                         <textarea
                             wire:model="newMessage"

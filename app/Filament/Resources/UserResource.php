@@ -15,7 +15,7 @@ use Filament\Actions\ViewAction;
 use Filament\Forms;
 use Filament\Infolists;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Components\Section;
+use Filament\Schemas\Components\Section;
 use Filament\Infolists\Infolist;
 use Filament\Schemas\Schema;
 use Filament\Tables;
@@ -50,6 +50,19 @@ class UserResource extends Resource
                     ])
                     ->required()
                     ->default(UserRole::Student->value),
+                Forms\Components\TextInput::make('password')
+                    ->password()
+                    ->revealable()
+                    ->required(fn (string $operation): bool => $operation === 'create')
+                    ->dehydrated(fn (?string $state): bool => filled($state))
+                    ->confirmed()
+                    ->minLength(8),
+                Forms\Components\TextInput::make('password_confirmation')
+                    ->password()
+                    ->revealable()
+                    ->label('Confirm Password')
+                    ->required(fn (string $operation): bool => $operation === 'create')
+                    ->dehydrated(false),
             ]);
     }
 
@@ -106,7 +119,7 @@ class UserResource extends Resource
     {
         return $schema
             ->schema([
-                Infolists\Components\Section::make('User Information')
+                Section::make('User Information')
                     ->schema([
                         Infolists\Components\TextEntry::make('name'),
                         Infolists\Components\TextEntry::make('email'),
@@ -125,7 +138,7 @@ class UserResource extends Resource
                             ->dateTime(),
                     ])
                     ->columns(2),
-                Infolists\Components\Section::make('Statistics')
+                Section::make('Statistics')
                     ->schema([
                         Infolists\Components\TextEntry::make('ratings_count')
                             ->label('Total Ratings')
