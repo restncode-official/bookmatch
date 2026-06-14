@@ -22,8 +22,11 @@
                     <x-nav-link :href="route('home')" :active="request()->routeIs('home')">
                         {{ __('Home') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('books.index')" :active="request()->routeIs('books.*')">
+                    <x-nav-link :href="route('books.index')" :active="request()->routeIs('books.index') || request()->routeIs('books.show')">
                         {{ __('Books') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('search')" :active="request()->routeIs('search')">
+                        {{ __('Search') }}
                     </x-nav-link>
                     @auth
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
@@ -101,8 +104,11 @@
             <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')">
                 {{ __('Home') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('books.index')" :active="request()->routeIs('books.*')">
+            <x-responsive-nav-link :href="route('books.index')" :active="request()->routeIs('books.index') || request()->routeIs('books.show')">
                 {{ __('Books') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('search')" :active="request()->routeIs('search')">
+                {{ __('Search') }}
             </x-responsive-nav-link>
             @auth
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">

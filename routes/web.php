@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RatingController;
+use App\Livewire\AdvancedBookSearch;
 use App\Livewire\BookCatalogue;
 use App\Livewire\BookDetail;
 use App\Livewire\BookmarkPage;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', HomePage::class)->name('home');
 
 Route::get('/books', BookCatalogue::class)->name('books.index');
+Route::get('/search', AdvancedBookSearch::class)->name('search');
 Route::get('/books/{book:slug}', BookDetail::class)->name('books.show');
 
 Route::middleware('auth')->group(function () {
