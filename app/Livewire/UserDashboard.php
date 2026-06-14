@@ -53,7 +53,7 @@ class UserDashboard extends Component
         $rating->update([
             'rating'      => $this->editRating,
             'message'     => $this->editMessage ?: null,
-            'is_approved' => false,
+            'is_approved' => null,
         ]);
 
         $this->editingRatingId = null;

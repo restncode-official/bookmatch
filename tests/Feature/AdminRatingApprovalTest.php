@@ -43,13 +43,13 @@ class AdminRatingApprovalTest extends TestCase
     {
         $admin  = User::factory()->create(['role' => UserRole::Admin]);
         $admin->assignRole('admin');
-        $rating = Rating::factory()->create();
+        $rating = Rating::factory()->create(['is_approved' => null]);
 
         $this->assertTrue($admin->hasPermissionTo('approve-ratings'));
 
-        $rating->delete();
+        $rating->update(['is_approved' => false]);
 
-        $this->assertDatabaseMissing('ratings', ['id' => $rating->id]);
+        $this->assertDatabaseHas('ratings', ['id' => $rating->id, 'is_approved' => false]);
     }
 
     public function test_librarian_can_approve_rating(): void

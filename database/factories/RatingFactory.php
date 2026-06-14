@@ -18,7 +18,7 @@ class RatingFactory extends Factory
             'book_id'     => Book::factory(),
             'rating'      => fake()->numberBetween(1, 5),
             'message'     => fake()->optional(0.6)->sentence(),
-            'is_approved' => false,
+            'is_approved' => null,
         ];
     }
 

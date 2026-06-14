@@ -7,19 +7,19 @@ namespace App\Filament\Resources;
 use App\Events\RatingApproved;
 use App\Filament\Resources\RatingResource\Pages;
 use App\Models\Rating;
+use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Actions\Action;
 use Filament\Forms;
+use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Resources\Resource;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Collection;
 
 class RatingResource extends Resource
 {
@@ -67,11 +67,20 @@ class RatingResource extends Resource
                 Tables\Columns\TextColumn::make('rating')
                     ->label('Rating')
                     ->sortable()
-                    ->formatStateUsing(fn (string $state): string => str_repeat('\xE2\x98\x85', (int) $state) . str_repeat('\xE2\x98\xAF', 5 - (int) $state)),
+                    ->formatStateUsing(fn (string $state): string => str_repeat('★', (int) $state) . str_repeat('☆', 5 - (int) $state)),
                 Tables\Columns\TextColumn::make('is_approved')
+                    ->label('Status')
                     ->badge()
-                    ->formatStateUsing(fn (bool $state): string => $state ? 'Approved' : 'Pending')
-                    ->color(fn (bool $state): string => $state ? 'success' : 'warning')
+                    ->formatStateUsing(fn (?bool $state): string => match ($state) {
+                        true    => 'Approved',
+                        false   => 'Rejected',
+                        default => 'Pending',
+                    })
+                    ->color(fn (?bool $state): string => match ($state) {
+                        true    => 'success',
+                        false   => 'danger',
+                        default => 'warning',
+                    })
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
@@ -79,62 +88,64 @@ class RatingResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('is_approved')
+                Tables\Filters\SelectFilter::make('status')
+                    ->label('Status')
                     ->options([
-                        '0' => 'Pending',
-                        '1' => 'Approved',
+                        'pending'  => 'Pending',
+                        'approved' => 'Approved',
+                        'rejected' => 'Rejected',
                     ])
-                    ->query(fn (Builder $query, array $data) => isset($data['is_approved']) ? $query->where('is_approved', (bool) $data['is_approved']) : $query)
+                    ->query(fn (Builder $query, array $data): Builder => match ($data['value'] ?? null) {
+                        'pending'  => $query->whereNull('is_approved'),
+                        'approved' => $query->where('is_approved', true),
+                        'rejected' => $query->where('is_approved', false),
+                        default    => $query,
+                    })
                     ->native(false),
             ])
-            ->actions([
+            ->recordActions([
                 Action::make('approve')
                     ->label('Approve')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
+                    ->visible(fn (Rating $record): bool => $record->is_approved !== true)
                     ->requiresConfirmation()
-                    ->action(function (Rating $record) {
-                        DB::transaction(function () use ($record) {
-                            $record->update(['is_approved' => true]);
-                            $record->load('user', 'book');
-                            RatingApproved::dispatch($record);
-                        });
+                    ->action(function (Rating $record): void {
+                        $record->update(['is_approved' => true]);
+                        $record->load(['user', 'book']);
+                        RatingApproved::dispatch($record);
                     }),
+                Action::make('revoke')
+                    ->label('Revoke')
+                    ->icon('heroicon-o-arrow-uturn-left')
+                    ->color('warning')
+                    ->visible(fn (Rating $record): bool => $record->is_approved === true)
+                    ->requiresConfirmation()
+                    ->action(fn (Rating $record): bool => $record->update(['is_approved' => null])),
                 Action::make('reject')
                     ->label('Reject')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
+                    ->visible(fn (Rating $record): bool => $record->is_approved === null)
                     ->requiresConfirmation()
-                    ->action(function (Rating $record) {
-                        DB::transaction(function () use ($record) {
-                            $record->delete();
-                        });
-                    }),
+                    ->action(fn (Rating $record): bool => $record->update(['is_approved' => false])),
                 EditAction::make(),
                 DeleteAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     BulkAction::make('approveAll')
                         ->label('Approve Selected')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
                         ->requiresConfirmation()
-                        ->action(function (\Illuminate\Database\Eloquent\Collection $records) {
-                            DB::transaction(function () use ($records) {
-                                $records->each->update(['is_approved' => true]);
-                            });
-                        }),
+                        ->action(fn (Collection $records): Collection => $records->each->update(['is_approved' => true])),
                     BulkAction::make('rejectAll')
                         ->label('Reject Selected')
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')
                         ->requiresConfirmation()
-                        ->action(function (\Illuminate\Database\Eloquent\Collection $records) {
-                            DB::transaction(function () use ($records) {
-                                $records->each->delete();
-                            });
-                        }),
+                        ->action(fn (Collection $records): Collection => $records->each->update(['is_approved' => false])),
                     DeleteBulkAction::make(),
                 ]),
             ])

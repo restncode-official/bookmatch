@@ -45,7 +45,7 @@ class RatingController extends Controller
             [
                 'rating'      => $request->integer('rating'),
                 'message'     => $request->string('message')->toString() ?: null,
-                'is_approved' => false,
+                'is_approved' => null,
             ]
         );
 

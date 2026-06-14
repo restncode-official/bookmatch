@@ -126,7 +126,7 @@ class BookDetail extends Component
             'book_id'     => $this->book->id,
             'rating'      => $this->newRating,
             'message'     => $this->newMessage ?: null,
-            'is_approved' => false,
+            'is_approved' => null,
         ]);
 
         RatingSubmitted::dispatch(Auth::user(), $this->book);
@@ -175,7 +175,7 @@ class BookDetail extends Component
         $rating->update([
             'rating'      => $this->editRating,
             'message'     => $this->editMessage ?: null,
-            'is_approved' => false,
+            'is_approved' => null,
         ]);
 
         $this->editingRating = false;

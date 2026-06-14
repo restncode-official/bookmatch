@@ -40,7 +40,7 @@ class RatingTest extends TestCase
             'user_id'     => $user->id,
             'book_id'     => $book->id,
             'rating'      => 4,
-            'is_approved' => false,
+            'is_approved' => null,
         ]);
     }
 

@@ -22,7 +22,7 @@ class RatingController extends Controller
 
         $book->ratings()->updateOrCreate(
             ['user_id' => $request->user()->id],
-            [...$validated, 'user_id' => $request->user()->id, 'is_approved' => false],
+            [...$validated, 'user_id' => $request->user()->id, 'is_approved' => null],
         );
 
         return back()->with('status', 'Rating submitted and awaiting approval.');
