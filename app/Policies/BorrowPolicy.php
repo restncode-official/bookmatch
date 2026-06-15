@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
+use App\Enums\BorrowStatus;
 use App\Models\Borrow;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class BorrowPolicy
 {
@@ -23,12 +23,24 @@ class BorrowPolicy
      */
     public function view(User $user, Borrow $borrow): bool
     {
-        return true;
+        return $user->id === $borrow->user_id;
     }
 
     public function create(User $user): bool
     {
         return true;
+    }
+
+    public function returnBorrow(User $user, Borrow $borrow): bool
+    {
+        return $user->id === $borrow->user_id
+            && in_array($borrow->status, [BorrowStatus::Active, BorrowStatus::Overdue], true);
+    }
+
+    public function cancelRequest(User $user, Borrow $borrow): bool
+    {
+        return $user->id === $borrow->user_id
+            && $borrow->status === BorrowStatus::Pending;
     }
 
     /**

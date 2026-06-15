@@ -9,4 +9,6 @@ enum BorrowStatus: string
     case Active   = 'active';
     case Returned = 'returned';
     case Overdue  = 'overdue';
+    case Pending  = 'pending';
+    case Rejected = 'rejected';
 }

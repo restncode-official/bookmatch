@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Livewire;
 
+use App\Enums\BorrowStatus;
 use App\Models\Rating;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -67,6 +69,38 @@ class UserDashboard extends Component
     {
         Auth::user()->ratings()->findOrFail($ratingId)->delete();
         session()->flash('success', 'Review deleted.');
+    }
+
+    public function returnBook(int $borrowId): void
+    {
+        $borrow = Auth::user()->borrows()->findOrFail($borrowId);
+
+        if (! in_array($borrow->status, [BorrowStatus::Active, BorrowStatus::Overdue], true)) {
+            return;
+        }
+
+        DB::transaction(function () use ($borrow): void {
+            $borrow->update([
+                'returned_at' => now(),
+                'status'      => BorrowStatus::Returned,
+            ]);
+            $borrow->book?->increment('available_copies');
+        });
+
+        session()->flash('success', 'Book returned successfully.');
+    }
+
+    public function cancelBorrowRequest(int $borrowId): void
+    {
+        $borrow = Auth::user()->borrows()->findOrFail($borrowId);
+
+        if ($borrow->status !== BorrowStatus::Pending) {
+            return;
+        }
+
+        $borrow->delete();
+
+        session()->flash('success', 'Borrow request cancelled.');
     }
 
     public function render()

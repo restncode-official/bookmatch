@@ -21,6 +21,7 @@ class BookDetail extends Component
 {
     public Book $book;
     public bool $isBookmarked = false;
+    public bool $showBorrowModal = false;
 
     public int $newRating = 0;
     public string $newMessage = '';
@@ -38,6 +39,19 @@ class BookDetail extends Component
                 ->where('book_id', $book->id)
                 ->exists();
         }
+    }
+
+    #[Computed]
+    public function activeBorrow(): ?Borrow
+    {
+        if (! Auth::check()) {
+            return null;
+        }
+
+        return Borrow::where('user_id', Auth::id())
+            ->where('book_id', $this->book->id)
+            ->whereIn('status', [BorrowStatus::Pending, BorrowStatus::Active, BorrowStatus::Overdue])
+            ->first();
     }
 
     #[Computed]
@@ -62,9 +76,23 @@ class BookDetail extends Component
             ->first();
     }
 
-    public function borrowBook(): void
+    public function openBorrowModal(): void
     {
         if (! Auth::check()) {
+            return;
+        }
+
+        if ($this->activeBorrow) {
+            $this->addError('borrow', 'You already have a pending or active borrow for this book.');
+            return;
+        }
+
+        $activeBorrowCount = Borrow::where('user_id', Auth::id())
+            ->whereIn('status', [BorrowStatus::Pending, BorrowStatus::Active, BorrowStatus::Overdue])
+            ->count();
+
+        if ($activeBorrowCount >= 5) {
+            $this->addError('borrow', 'You have reached the maximum of 5 active borrows. Please return a book first.');
             return;
         }
 
@@ -75,20 +103,35 @@ class BookDetail extends Component
             return;
         }
 
+        $this->showBorrowModal = true;
+    }
+
+    public function confirmBorrowRequest(): void
+    {
+        if (! Auth::check()) {
+            return;
+        }
+
         $borrow = Borrow::create([
             'user_id'     => Auth::id(),
             'book_id'     => $this->book->id,
-            'borrowed_at' => now(),
-            'due_date'    => now()->addDays(14),
-            'status'      => BorrowStatus::Active,
+            'borrowed_at' => null,
+            'due_date'    => null,
+            'status'      => BorrowStatus::Pending,
         ]);
 
-        $this->book->decrement('available_copies');
-        $this->book->refresh();
+        unset($this->activeBorrow);
+
+        $this->showBorrowModal = false;
 
         BookBorrowed::dispatch($borrow);
 
-        session()->flash('success', 'Book borrowed! Due back by ' . $borrow->due_date->format('M j, Y') . '.');
+        session()->flash('success', 'Request submitted! A librarian will approve it shortly.');
+    }
+
+    public function closeBorrowModal(): void
+    {
+        $this->showBorrowModal = false;
     }
 
     public function toggleBookmark(): void
@@ -204,8 +247,10 @@ class BookDetail extends Component
     public function render()
     {
         return view('livewire.book-detail', [
-            'approvedRatings' => $this->approvedRatings,
-            'userRating'      => $this->userRating,
+            'approvedRatings'  => $this->approvedRatings,
+            'userRating'       => $this->userRating,
+            'activeBorrow'     => $this->activeBorrow,
+            'showBorrowModal'  => $this->showBorrowModal,
         ])->title($this->book->title);
     }
 }

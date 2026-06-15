@@ -146,29 +146,54 @@
                     {{-- Action buttons --}}
                     <div class="flex flex-wrap items-center gap-3">
                         @auth
-                            @if($book->available_copies > 0)
-                            <button
-                                wire:click="borrowBook"
-                                wire:loading.attr="disabled"
-                                wire:target="borrowBook"
-                                class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold
-                                       text-white shadow-sm hover:bg-indigo-700 active:bg-indigo-800 transition-colors
-                                       disabled:opacity-60 disabled:cursor-not-allowed"
-                            >
-                                <svg wire:loading.remove wire:target="borrowBook"
-                                     class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                          d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016
-                                             18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3
-                                             .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>
-                                </svg>
-                                <svg wire:loading wire:target="borrowBook"
-                                     class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                                </svg>
-                                Borrow Book
-                            </button>
+                            @if($activeBorrow && $activeBorrow->status === \App\Enums\BorrowStatus::Pending)
+                                {{-- Request submitted, awaiting approval --}}
+                                <div class="inline-flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-200 px-5 py-2.5 text-sm font-semibold text-amber-700">
+                                    <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    Request Pending — awaiting librarian approval
+                                </div>
+                            @elseif($activeBorrow)
+                                {{-- Book is actively borrowed --}}
+                                <div class="inline-flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-5 py-2.5 text-sm font-semibold text-emerald-700">
+                                    <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    Borrowed — due back {{ $activeBorrow->due_date?->format('M j, Y') }}
+                                </div>
+                            @elseif($book->available_copies > 0)
+                                {{-- Copies available — show request button --}}
+                                <button
+                                    wire:click="openBorrowModal"
+                                    wire:loading.attr="disabled"
+                                    wire:target="openBorrowModal"
+                                    class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold
+                                           text-white shadow-sm hover:bg-indigo-700 active:bg-indigo-800 transition-colors
+                                           disabled:opacity-60 disabled:cursor-not-allowed"
+                                >
+                                    <svg wire:loading.remove wire:target="openBorrowModal"
+                                         class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                              d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016
+                                                 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3
+                                                 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>
+                                    </svg>
+                                    <svg wire:loading wire:target="openBorrowModal"
+                                         class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                                    </svg>
+                                    Request to Borrow
+                                </button>
+                            @else
+                                {{-- No copies available --}}
+                                <div class="inline-flex items-center gap-2 rounded-xl bg-gray-100 border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-500 cursor-not-allowed">
+                                    <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                                    </svg>
+                                    Unavailable
+                                </div>
                             @endif
 
                             <button
@@ -213,6 +238,59 @@
                         {{ $message }}
                     </p>
                     @enderror
+
+                    {{-- Borrow request confirmation modal --}}
+                    @if($showBorrowModal)
+                    <div class="fixed inset-0 z-50 flex items-center justify-center p-4" aria-modal="true" role="dialog">
+                        {{-- Backdrop --}}
+                        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="closeBorrowModal"></div>
+
+                        {{-- Dialog --}}
+                        <div class="relative z-10 w-full max-w-md rounded-2xl bg-white shadow-xl ring-1 ring-black/5 p-6">
+                            <div class="flex items-start gap-4">
+                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-50">
+                                    <svg class="h-5 w-5 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                              d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016
+                                                 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3
+                                                 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>
+                                    </svg>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="text-base font-semibold text-gray-900">Request to Borrow</h3>
+                                    <p class="mt-1 text-sm text-gray-500 leading-relaxed">
+                                        You are requesting to borrow <span class="font-medium text-gray-800">{{ $book->title }}</span>.
+                                        A librarian will review and approve your request before the book is issued.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="mt-6 flex justify-end gap-3">
+                                <button
+                                    wire:click="closeBorrowModal"
+                                    class="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600
+                                           hover:bg-gray-50 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    wire:click="confirmBorrowRequest"
+                                    wire:loading.attr="disabled"
+                                    wire:target="confirmBorrowRequest"
+                                    class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold
+                                           text-white hover:bg-indigo-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                                >
+                                    <svg wire:loading wire:target="confirmBorrowRequest"
+                                         class="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                                    </svg>
+                                    Confirm Request
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
                 </div>
             </div>
 

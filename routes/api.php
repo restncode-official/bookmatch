@@ -46,6 +46,7 @@ Route::prefix('v1')->group(function (): void {
         // Borrowing
         Route::get('borrows', [BorrowController::class, 'index']);
         Route::post('books/{book:slug}/borrow', [BorrowController::class, 'store']);
+        Route::post('borrows/{borrow}/return', [BorrowController::class, 'returnBorrow']);
 
         // Bookmarks
         Route::get('bookmarks', [BookmarkController::class, 'index']);

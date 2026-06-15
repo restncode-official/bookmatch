@@ -355,14 +355,17 @@
                                     <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500 whitespace-nowrap">Due Date</th>
                                     <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
                                     <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500 whitespace-nowrap">Returned</th>
+                                    <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Action</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-50">
                                 @foreach($myBorrows as $borrow)
                                 @php
                                     $isOverdue = $borrow->is_overdue || $borrow->status === \App\Enums\BorrowStatus::Overdue;
+                                    $isPending  = $borrow->status === \App\Enums\BorrowStatus::Pending;
+                                    $isRejected = $borrow->status === \App\Enums\BorrowStatus::Rejected;
                                 @endphp
-                                <tr class="{{ $isOverdue ? 'bg-red-50' : 'hover:bg-gray-50' }} transition-colors">
+                                <tr class="{{ $isOverdue ? 'bg-red-50' : ($isPending ? 'bg-amber-50' : 'hover:bg-gray-50') }} transition-colors">
                                     <td class="px-5 py-3.5">
                                         <a
                                             href="{{ route('books.show', $borrow->book) }}"
@@ -373,13 +376,27 @@
                                         </a>
                                     </td>
                                     <td class="px-5 py-3.5 text-gray-500 whitespace-nowrap">
-                                        {{ $borrow->borrowed_at->format('M j, Y') }}
+                                        {{ $borrow->borrowed_at?->format('M j, Y') ?? '—' }}
                                     </td>
                                     <td class="px-5 py-3.5 whitespace-nowrap {{ $isOverdue ? 'text-red-600 font-semibold' : 'text-gray-500' }}">
-                                        {{ $borrow->due_date->format('M j, Y') }}
+                                        {{ $borrow->due_date?->format('M j, Y') ?? '—' }}
                                     </td>
                                     <td class="px-5 py-3.5">
-                                        @if($isOverdue)
+                                        @if($isPending)
+                                            <span class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700">
+                                                <svg class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                </svg>
+                                                Pending
+                                            </span>
+                                        @elseif($isRejected)
+                                            <span class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-600">
+                                                <svg class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                                                </svg>
+                                                Rejected
+                                            </span>
+                                        @elseif($isOverdue)
                                             <span class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-red-100 text-red-700">
                                                 <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
@@ -398,6 +415,53 @@
                                     </td>
                                     <td class="px-5 py-3.5 text-gray-400 whitespace-nowrap text-xs">
                                         {{ $borrow->returned_at ? $borrow->returned_at->format('M j, Y') : '—' }}
+                                    </td>
+                                    <td class="px-5 py-3.5">
+                                        @if($isPending)
+                                            <button
+                                                wire:click="cancelBorrowRequest({{ $borrow->id }})"
+                                                wire:confirm="Cancel your request for '{{ $borrow->book->title }}'?"
+                                                wire:loading.attr="disabled"
+                                                wire:target="cancelBorrowRequest({{ $borrow->id }})"
+                                                class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5
+                                                       text-xs font-medium text-gray-600 hover:border-amber-200 hover:bg-amber-50 hover:text-amber-700
+                                                       transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                <svg wire:loading.remove wire:target="cancelBorrowRequest({{ $borrow->id }})"
+                                                     class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                                                </svg>
+                                                <svg wire:loading wire:target="cancelBorrowRequest({{ $borrow->id }})"
+                                                     class="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                                                </svg>
+                                                Cancel
+                                            </button>
+                                        @elseif(in_array($borrow->status, [\App\Enums\BorrowStatus::Active, \App\Enums\BorrowStatus::Overdue]))
+                                            <button
+                                                wire:click="returnBook({{ $borrow->id }})"
+                                                wire:confirm="Return '{{ $borrow->book->title }}'? This cannot be undone."
+                                                wire:loading.attr="disabled"
+                                                wire:target="returnBook({{ $borrow->id }})"
+                                                class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5
+                                                       text-xs font-medium text-gray-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600
+                                                       transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                <svg wire:loading.remove wire:target="returnBook({{ $borrow->id }})"
+                                                     class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/>
+                                                </svg>
+                                                <svg wire:loading wire:target="returnBook({{ $borrow->id }})"
+                                                     class="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                                                </svg>
+                                                Return
+                                            </button>
+                                        @else
+                                            <span class="text-gray-300 text-xs">—</span>
+                                        @endif
                                     </td>
                                 </tr>
                                 @endforeach
