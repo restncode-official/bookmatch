@@ -136,14 +136,6 @@
       0 => 'Laravel\\Pao\\Laravel\\ServiceProvider',
     ),
   ),
-  'laravel/reverb' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'Laravel\\Reverb\\ApplicationManagerServiceProvider',
-      1 => 'Laravel\\Reverb\\ReverbServiceProvider',
-    ),
-  ),
   'laravel/roster' => 
   array (
     'providers' => 

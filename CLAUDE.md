@@ -8,9 +8,10 @@ BookMatch is a university library management system: a catalog of books with bor
 
 ## Stack
 
-- PHP 8.4 (8.4.22), Laravel 13, Filament **5** (note: v5 API differs from v3/v4 — `form(Schema $schema)`, actions live under `Filament\Actions\`)
+- PHP 8.4 (8.4.22), Laravel 13 (v13.15), Filament **5** v5.6 (note: v5 API differs from v3/v4 — `form(Schema $schema)`, actions live under `Filament\Actions\`)
 - Spatie Laravel Permission 8 for roles/permissions
-- Laravel Breeze (Blade + Alpine + Tailwind 3, Vite 8) — server-rendered, **not** Inertia/Livewire SPA
+- Laravel Sanctum v4 — token auth for the REST API
+- Laravel Breeze v2 (Blade + Alpine + Tailwind 3, Vite 8) — server-rendered, **not** Inertia/Livewire SPA
 - **PHPUnit** for tests (not Pest, despite the pest-plugin allow-list entry)
 - MySQL in development (`bookmatch` db); SQLite `:memory:` in tests
 
@@ -56,8 +57,10 @@ Roles are tracked in **two parallel places that must be kept in sync**:
 - Single panel `admin` at `/admin` (`AdminPanelProvider`), Amber theme. Resources: Book, Borrow, Rating, Genre, User. Custom dashboard widgets live in `app/Filament/Widgets` (stats, top-books table, bar/line charts).
 - Default seeded admin login: `admin@library.edu` / `password`.
 
-### Two frontends
-Staff use Filament (`/admin`); end users use Breeze Blade views (`welcome`, `dashboard`, `profile`, auth flows in `routes/auth.php`). Keep admin CRUD in Filament resources and user-facing pages in Blade/controllers — don't conflate them.
+### Three frontends
+- **Filament** (`/admin`) — staff/admin CRUD panel.
+- **Breeze Blade** — end-user web pages (`welcome`, `dashboard`, `profile`, auth flows in `routes/auth.php`).
+- **REST API** (`/api/v1`, `routes/api.php`) — mobile/third-party client API authenticated via Laravel Sanctum tokens. Controllers live in `app/Http/Controllers/Api/`. Public routes: register, login, genres, books, book ratings. Authenticated routes (`auth:sanctum`): logout, me, profile, borrows, bookmarks, ratings (own), dashboard, recommendations. Staff/admin actions are intentionally **not** exposed through the API — use Filament for those.
 
 ### Seeding order
 `DatabaseSeeder` runs `RolesAndPermissionsSeeder` **first** (roles/permissions must exist before `UserSeeder` assigns them), then Genre → Book → User → Rating.

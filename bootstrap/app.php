@@ -14,6 +14,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Trust all proxies for servers running in a private network, such as when using Laravel Sail.
+        $middleware->trustProxies(at: [
+            '10.0.0.0/8',
+            '172.16.0.0/12',
+            '172.17.0.0/16',
+        ]);
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
